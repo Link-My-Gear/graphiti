@@ -1,0 +1,27 @@
+name: Auto-merge on green
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  enable-auto-merge:
+    # required_linear_history (org ruleset) forbids the "merge commit" method entirely,
+    # so this bot uses squash like everywhere else. The one PR type that must NOT be
+    # squashed is a merge of the `upstream` remote (squashing it breaks the ancestry
+    # this repo's docs rely on) -- that PR stays manual, merged by a human via "Create
+    # a merge commit" (requires the org-admin ruleset bypass squash can't use anyway).
+    if: >-
+      github.event.pull_request.draft == false &&
+      !contains(github.event.pull_request.head.ref, 'upstream') &&
+      !contains(github.event.pull_request.head.ref, 'sync-upstream')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable auto-merge (squash)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge --auto --squash "${{ github.event.pull_request.html_url }}"
