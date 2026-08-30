@@ -23,5 +23,8 @@ jobs:
     steps:
       - name: Enable auto-merge (squash)
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # ARG-2592: GitHub suppresses events triggered by GITHUB_TOKEN, so a
+          # bot merge emitted no push event and on-push workflows never ran.
+          # A PAT makes an auto-merge behave exactly like a human merge.
+          GH_TOKEN: ${{ secrets.AUTO_MERGE_TOKEN }}
         run: gh pr merge --auto --squash "${{ github.event.pull_request.html_url }}"
